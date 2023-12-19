@@ -1,0 +1,18 @@
+body {
+  margin: 0;
+  overflow: hidden;
+}
+
+.table-container {
+  position: absolute;
+  width: 50%;
+  height: 100%;
+  right: 0;
+  background-color: #ddd;
+  overflow: hidden;
+}
+
+.svg-table {
+  position: absolute;
+  cursor: move;
+}

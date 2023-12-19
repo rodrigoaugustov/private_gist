@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="css/result-light.css">
+  <script src="js/plain-draggable.min.js"></script>
+  <script src="js/leader-line.min.js"></script>
+</head>
+
+<body>
+
+  <script>
+    class Attribute {
+      constructor(nome, tipo, isPrimaryKey) {
+        this.Nome = nome;
+        this.Tipo = tipo;
+        this.PK = isPrimaryKey;
+      }
+
+      drawAttribute(svg, x, y) {
+        const attributeGroup = document.createElementNS("http://www.w3.org/2000/svg", "g");
+
+        const rect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+        rect.setAttribute("x", x);
+        rect.setAttribute("y", y);
+        rect.setAttribute("width", 300);
+        rect.setAttribute("height", 25);
+        rect.setAttribute("fill", "#ecf0f1");
+
+        const textNome = document.createElementNS("http://www.w3.org/2000/svg", "text");
+        textNome.setAttribute("x", x + 10);
+        textNome.setAttribute("y", y + 15);
+        textNome.setAttribute("fill", "black");
+        textNome.textContent = this.Nome;
+
+        const textTipo = document.createElementNS("http://www.w3.org/2000/svg", "text");
+        textTipo.setAttribute("x", x + 170);
+        textTipo.setAttribute("y", y + 15);
+        textTipo.setAttribute("fill", "black");
+        textTipo.textContent = this.Tipo;
+
+        const keyIcon = document.createElementNS("http://www.w3.org/2000/svg", "text");
+        keyIcon.setAttribute("x", x + 270);
+        keyIcon.setAttribute("y", y + 15);
+        keyIcon.setAttribute("fill", "black");
+        keyIcon.textContent = "";
+
+        if (this.PK) {
+          keyIcon.textContent = "🔑"; // Adiciona o ícone de chave
+        }
+
+        attributeGroup.appendChild(rect);
+        attributeGroup.appendChild(textNome);
+        attributeGroup.appendChild(textTipo);
+        attributeGroup.appendChild(keyIcon);
+        svg.appendChild(attributeGroup);
+      }
+    }
+
+    class Table {
+      constructor(nome, attributes, container) {
+        this.Nome = nome;
+        this.Attributes = attributes;
+        this.container = container;
+        this.svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+        this.svg.setAttribute("class", "svg-table");
+      }
+
+      drawTable() {
+        // ToDo: Parametrizar os valores de atributos
+        this.svg.setAttribute("width", "300");
+        this.svg.style.backgroundColor = "#3498db";
+        this.width = 300;
+
+        const textNome = document.createElementNS("http://www.w3.org/2000/svg", "text");
+        textNome.setAttribute("x", "100");
+        textNome.setAttribute("y", "20");
+        textNome.setAttribute("fill", "white");
+        textNome.setAttribute("font", "bold 14px Arial");
+        textNome.textContent = this.Nome;
+
+        this.svg.appendChild(textNome);
+
+        let yOffset = 32;
+
+        this.Attributes
+          .filter(attribute => attribute.PK)
+          .forEach((attribute) => {
+            attribute.drawAttribute(this.svg, 0, yOffset);
+            yOffset += 25;
+          });
+
+        const line1 = document.createElementNS("http://www.w3.org/2000/svg", "line");
+        line1.setAttribute("x1", "0");
+        line1.setAttribute("y1", `${yOffset}`);
+        line1.setAttribute("x2", "300");
+        line1.setAttribute("y2", `${yOffset}`);
+        line1.setAttribute("stroke", "#000000");
+        line1.setAttribute("stroke-width", "1");
+        this.svg.appendChild(line1);
+
+        yOffset += 2; // Adicione um espaço entre as seções
+
+        this.Attributes
+          .filter(attribute => !attribute.PK)
+          .forEach((attribute) => {
+            attribute.drawAttribute(this.svg, 0, yOffset);
+            yOffset += 25;
+          });
+
+        this.height = yOffset;
+        this.svg.setAttribute("height", `${this.height}`);
+        this.svg.setAttribute("id", `${this.Nome}`);
+        this.container.appendChild(this.svg);
+        this.draggable = new PlainDraggable(this.svg);
+      }
+    }
+
+    // Criar o esquema da tabela ao carregar a página
+    window.onload = function () {
+      const tableContainer = document.createElement("div");
+      tableContainer.className = "table-container";
+      tableContainer.style.width = `${window.innerWidth / 4 * 3}px`; // area de modelagem ocupa 3/4 da tela
+      tableContainer.style.height = `${window.innerHeight}px`;
+      document.body.appendChild(tableContainer);
+
+      addButton(tableContainer);
+    };
+
+    function addButton(container) {
+      const addButton = document.createElement("button");
+      addButton.textContent = "Adicionar Tabela";
+      addButton.addEventListener('click', () => addNewTable(container));
+      container.appendChild(addButton);
+    }
+
+    var contagem = 1
+    function addNewTable(container) {
+      const attributes = [
+        new Attribute("NovoAtributo1", "TipoNovo1", true),
+        new Attribute("NovoAtributo2", "TipoNovo2", false),
+        new Attribute("NovoAtributo3", "TipoNovo2", false),
+        new Attribute("NovoAtributo4", "TipoNovo2", true),
+      ];
+
+      var newTable = new Table(`NovaTabela${contagem}`, attributes, container);
+      newTable.drawTable();
+      if (contagem > 1){
+        var line = new LeaderLine(document.getElementById(`NovaTabela${contagem-1}`), document.getElementById(`NovaTabela${contagem}`))
+        newTable.draggable.onDrag = function(newPosition){line.position()}
+      }
+
+      contagem = contagem + 1;
+    }
+  </script>
+
+</body>
+
+</html>
